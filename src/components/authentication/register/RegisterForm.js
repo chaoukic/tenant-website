@@ -43,10 +43,17 @@ export default function RegisterForm() {
           password: values.password
         }
       ).then((response) =>{
-        if (response.data.status){
+        if (response.data.data.status){
+          //Hash the key before storing it in the localstorage
+          localStorage.setItem('value', response.data.data.token)
+          //Hash the key and the value in the localstorage to not make it visible to the user -- TBD later along the project
+          localStorage.setItem('user',response.data.data.user)
           navigate('/dashboard', { replace: true });
+        }else{
+          
         }
       }).catch((error)=>{
+        // SHOW ERROR MESSAGE LATER ON --> 
         console.log(error)
       })
       

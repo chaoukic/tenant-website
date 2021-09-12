@@ -1,7 +1,7 @@
 import * as Yup from 'yup';
 import { useState } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import { useFormik, Form, FormikProvider } from 'formik';
+import { useFormik, Form, FormikProvider} from 'formik';
 import { Icon } from '@iconify/react';
 import eyeFill from '@iconify/icons-eva/eye-fill';
 import eyeOffFill from '@iconify/icons-eva/eye-off-fill';
@@ -12,6 +12,7 @@ import {
   Stack,
   Checkbox,
   TextField,
+  Typography,
   IconButton,
   InputAdornment,
   FormControlLabel
@@ -33,33 +34,44 @@ export default function LoginForm() {
     initialValues: {
       email: '',
       password: '',
-      remember: true
+      remember: true,
+      login:''
     },
     validationSchema: LoginSchema,
-    onSubmit: (values) => {
+    onSubmit: (values, actions) => {
       axios.post(
         '/api/tenants/login',{
           email:values.email,
           password: values.password
         }
       ).then((response) =>{
-        if (response.data.status){
+        if (response.data.data.status){
+          console.log(response.data.data)
+          //Hash the key before storing it in the localstorage
+          localStorage.setItem('value', response.data.data.token)
+          //Hash the key and the value in the localstorage to not make it visible to the user -- TBD later along the project
+          localStorage.setItem('user',response.data.data.user)
           navigate('/dashboard', { replace: true });
+        }
+        else{
+          // SHOW ERROR MESSAGE LATER ON --> 
+          actions.setErrors("login",response.data.data.message)
+          actions.setSubmitting(false)
         }
 
       }).catch((error)=>{
-        console.log(error)
+        //  @TBD -- SHOW ERROR MESSAGE LATER ON 
+        actions.setErrors("login",error.message)
+        actions.setSubmitting(false)
       })
-      navigate('/dashboard', { replace: true });
     }
   });
 
-  const { errors, touched, values, isSubmitting, handleSubmit, getFieldProps } = formik;
+  const { errors, touched, values, isSubmitting, handleSubmit, getFieldProps} = formik;
 
   const handleShowPassword = () => {
     setShowPassword((show) => !show);
   };
-
   return (
     <FormikProvider value={formik}>
       <Form autoComplete="off" noValidate onSubmit={handleSubmit}>
@@ -103,6 +115,9 @@ export default function LoginForm() {
           <Link component={RouterLink} variant="subtitle2" to="#">
             Forgot password?
           </Link>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            {errors.login}
+          </Typography>
         </Stack>
 
         <LoadingButton
